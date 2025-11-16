@@ -5,6 +5,44 @@ It implements low-level networking using POSIX sockets and includes a manually w
 
 The goal is to understand how HTTP works internally — request parsing, routing, content serving, headers, and responses — by building everything step-by-step.
 
+# Architecture Diagram
+
+        +--------------------------+
+        |        Client            |
+        +------------+-------------+
+                     |
+                     v (TCP)
+        +------------+-------------+
+        |     Linux Socket API     |
+        |  (accept, recv, send)    |
+        +------------+-------------+
+                     |
+         For each connection:
+                     v
+        +------------+-------------+
+        |     pthread_create       |
+        +------------+-------------+
+                     |
+                     v
+        +------------+-------------+
+        |    handle_client()       |
+        |  - parse HTTP request    |
+        |  - router lookup         |
+        |  - static fallback       |
+        +------------+-------------+
+                     |
+                     v
+        +------------+-------------+
+        |  Route Handler Function  |
+        |  (C function pointer)    |
+        +------------+-------------+
+                     |
+                     v
+        +------------+-------------+
+        |   HTTP Response Builder  |
+        +--------------------------+
+
+
 ---
 
 ## 🚀 Features
@@ -100,6 +138,22 @@ Average latency was 28 ms, with a maximum of 55 ms under heavy load.
 
 
 
+🔮 Future Enhancements
+
+1. Routing Table / Router Module
+Add a proper router with path matching, method-based routing (GET, POST…), and dynamic routes.
+
+2. HTTP/1.1 Keep-Alive Support
+Reduce latency and improve throughput by keeping connections open for multiple requests.
+
+3. Thread Pool Instead of Per-Thread Model
+Replace one-thread-per-connection with a reusable pool to support thousands of clients more efficiently.
+
+4. Non-Blocking I/O (epoll/kqueue) Version
+Build a high-performance event-driven server like Nginx for handling 10K+ concurrent clients.
+
+5. Static File Serving Module
+Add ability to serve files (HTML, CSS, JS, images) from a public directory with caching headers.
  
 
 
